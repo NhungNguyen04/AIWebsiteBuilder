@@ -10,15 +10,15 @@ import React, { useState } from "react";
 function page() {
   const trpc = useTRPC();
   const [value, setValue] = useState('');
-  const invoke = useMutation(trpc.invoke.mutationOptions({
+  const createdMessage = useMutation(trpc.messages.create.mutationOptions({
     onSuccess: () => {
-      toast.success("Background job invoked successfully!");
+      toast.success("Message created!");
     }
   }));
   return (
     <div className="p-4 max-w-7xl mx-auto">
       <Input value={value} onChange={(e) => setValue(e.target.value)} />
-      <Button disabled={invoke.isPending} onClick={() => {invoke.mutate({input: value})}} className="mt-4">
+      <Button disabled={createdMessage.isPending} onClick={() => {createdMessage.mutate({value: value})}} className="mt-4">
         Invoke Background Job
       </Button>
     </div>
