@@ -6,23 +6,29 @@ import { useTRPC } from "../trpc/client"
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 
-function page() {
+function Page() {
   const trpc = useTRPC();
   const [value, setValue] = useState('');
-  const createdMessage = useMutation(trpc.messages.create.mutationOptions({
-    onSuccess: () => {
-      toast.success("Message created!");
+  const router = useRouter();
+  const createdProject = useMutation(trpc.projects.create.mutationOptions({
+    onError: (error) => { toast.error(error.message); },
+    onSuccess: (data) => { 
+      toast.success("Project created successfully!");
+      router.push(`/project/${data.id}`);
     }
   }));
   return (
-    <div className="p-4 max-w-7xl mx-auto">
-      <Input value={value} onChange={(e) => setValue(e.target.value)} />
-      <Button disabled={createdMessage.isPending} onClick={() => {createdMessage.mutate({value: value})}} className="mt-4">
-        Invoke Background Job
-      </Button>
+    <div className="h-screen w-screen flex items-center justify-center">
+      <div className="max-w-7xl max mx-auto flex items-center flex-col gap-4 justify-center">
+        <Input value={value} onChange={(e) => setValue(e.target.value)} />
+        <Button disabled={createdProject.isPending} onClick={() => {createdProject.mutate({value: value})}} className="mt-4">
+          Submit
+        </Button>
+      </div>
     </div>
   )
 }
 
-export default page
+export default Page
