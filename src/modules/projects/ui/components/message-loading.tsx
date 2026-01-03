@@ -19,7 +19,7 @@ const ShimmerMessages = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentMessageIndex((prevIndex) => (prevIndex + 1) % messages.length);
-    }, 1500);
+    }, 2000);
 
     return() => clearInterval(interval);
   }, [messages.length]);
