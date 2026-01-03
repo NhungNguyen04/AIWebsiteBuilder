@@ -8,7 +8,8 @@ import TextareaAutosize from 'react-textarea-autosize';
 import { Button } from "@/components/ui/button";
 import { ArrowUpIcon, Loader2Icon } from "lucide-react";
 import { useTRPC } from "@/src/trpc/client";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 
 interface Props {
@@ -30,13 +31,30 @@ export const MessageForm = ({ projectId }: Props) => {
     },
   });
   const trpc = useTRPC();
-  const createMessage = useMutation(trpc.messages.create.mutationOptions());
+  const queryClient = useQueryClient();
+  const createMessage = useMutation({
+    ...trpc.messages.create.mutationOptions(),
+    onSuccess: () => {
+      // Invalidate and refetch messages
+      queryClient.invalidateQueries({
+        queryKey: [['messages', 'getMany'], { input: { projectId }, type: 'query' }]
+      });
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to send message");
+    }
+  });
+  
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
-    await createMessage.mutateAsync({
-      value: data.value,
-      projectId: projectId
-    });
-    form.reset();
+    try {
+      await createMessage.mutateAsync({
+        value: data.value,
+        projectId: projectId
+      });
+      form.reset();
+    } catch (error) {
+      // Error already handled by onError callback
+    }
   }
 
   const isPending = createMessage.isPending;

@@ -1,0 +1,55 @@
+import Image from "next/image";
+import { useEffect, useState } from "react";
+
+const ShimmerMessages = () => {
+  const messages = [
+    "Thinking...",
+    "Loading...",
+    "Analyzing request...",
+    "Crafting components...",
+    "Optimizing layout...",
+    "Generating response...",
+    "Please wait...",
+    "Almost done...",
+    "Finalizing..."
+  ]
+
+  const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentMessageIndex((prevIndex) => (prevIndex + 1) % messages.length);
+    }, 1500);
+
+    return() => clearInterval(interval);
+  }, [messages.length]);
+
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-base text-muted-foreground animate-pulse">
+        {messages[currentMessageIndex]}
+      </span>
+    </div>
+  )
+};
+
+export const MessageLoading = () => {
+
+  return (
+    <div className="flex flex-col group px-2 pb-4">
+      <div className="flex items-center gap-2 pl-2 mb-2">
+        <Image
+          src="/logo.svg"
+          alt="Codis"
+          width={18}
+          height={18}
+          className="shrink-0"
+        />
+        <span className="text-sm font-medium">Codis</span>
+      </div>
+      <div className="pl-8.5 flex flex-col gap-y-4">
+        <ShimmerMessages />
+      </div>
+    </div>
+  )
+}
