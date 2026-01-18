@@ -20,13 +20,15 @@ export const MessagesContainer = ({ projectId, activeFragment, setActiveFragment
         refetchInterval: 5000
     })) 
     const bottomRef = useRef<HTMLDivElement>(null);
+    const lastAssistantMessageIdRef = useRef<string | null>(null);
 
     useEffect(() => {
-        const lastAssistantMessageWithFragment = messages.findLast(
-            msg => msg.role === 'ASSISTANT' && !!msg.fragment);
+        const lastAssistantMessage = messages.findLast(
+            msg => msg.role === 'ASSISTANT');
 
-        if (lastAssistantMessageWithFragment) {
-            setActiveFragment(lastAssistantMessageWithFragment.fragment);
+        if (lastAssistantMessage?.fragment && lastAssistantMessage.id !== lastAssistantMessageIdRef.current) {
+            setActiveFragment(lastAssistantMessage.fragment);
+            lastAssistantMessageIdRef.current = lastAssistantMessage.id;
         }
     }, [messages]);
 
