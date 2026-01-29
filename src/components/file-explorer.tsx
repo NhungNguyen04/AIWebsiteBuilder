@@ -1,5 +1,6 @@
-import { CopyCheckIcon, CopyIcon } from "lucide-react";
+import { CopyCheckIcon, CopyIcon, DownloadIcon } from "lucide-react";
 import { useState, useMemo, useCallback, Fragment } from "react";
+import JSZip from 'jszip';
 
 import { Hint } from "@/src/components/ui/hint";
 import { Button } from "./ui/button";
@@ -125,6 +126,28 @@ export const FileExplorer = ({ files }: FileExplorerProps) => {
     }
   }, [selectedFile, files]);
 
+  const handleDownload = useCallback(async () => {
+    const zip = new JSZip();
+    
+    // Add all files to the zip
+    Object.entries(files).forEach(([path, content]) => {
+      zip.file(path, content);
+    });
+    
+    // Generate the zip file
+    const zipBlob = await zip.generateAsync({ type: 'blob' });
+    
+    // Create a download link and trigger download
+    const url = URL.createObjectURL(zipBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'source-code.zip';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, [files]);
+
   return (
     <ResizablePanelGroup direction="horizontal">
       <ResizablePanel defaultSize={30} minSize={30} className="bg-sidebar">
@@ -140,13 +163,20 @@ export const FileExplorer = ({ files }: FileExplorerProps) => {
           <div className="w-full h-full flex flex-col">
             <div className="border-b bg-sidebar px-4 py-2 flex justify-between items-center gap-x-2">
               <FileBreadcrumb filePath={selectedFile} />
-              <Hint text="Copy to clipboard" side="bottom">
-                <Button variant="outline" size="icon"
-                  className="ml-auto" onClick={handleCopy}
-                  disabled={false}>
-                   {copied ? <CopyCheckIcon className="size-4" /> : <CopyIcon className="size-4" />}
-                </Button>
-              </Hint>
+              <div className="flex gap-x-2">
+                <Hint text="Download source code" side="bottom">
+                  <Button variant="outline" size="icon" onClick={handleDownload}>
+                    <DownloadIcon className="size-4" />
+                  </Button>
+                </Hint>
+                <Hint text="Copy to clipboard" side="bottom">
+                  <Button variant="outline" size="icon"
+                    className="ml-auto" onClick={handleCopy}
+                    disabled={false}>
+                     {copied ? <CopyCheckIcon className="size-4" /> : <CopyIcon className="size-4" />}
+                  </Button>
+                </Hint>
+              </div>
             </div>
             <div className="flex-1 overflow-auto">
               <CodeView 

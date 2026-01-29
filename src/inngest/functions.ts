@@ -248,6 +248,7 @@ export const codeAgentFunction = inngest.createFunction(
         }
       })
     })
+    
     return {
       url: sandboxUrl,
       title: "Fragment",
@@ -255,4 +256,5 @@ export const codeAgentFunction = inngest.createFunction(
       summary: result.state.data.summary
     }  
   },
+  
 );
