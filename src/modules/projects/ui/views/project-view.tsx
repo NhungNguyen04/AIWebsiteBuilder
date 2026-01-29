@@ -85,10 +85,12 @@ export const ProjectView = ({ projectId }: Props) => {
             <TabsContent value="code" className="min-h-0">
               {(currentFiles || activeFragment?.files) && (
                 <FileExplorer 
-                  files={(currentFiles || activeFragment?.files) as { [path: string]: string }} 
+                  files={(currentFiles || activeFragment?.files) as { [path: string]: string }}
+                  fragmentId={activeFragment?.id}  // Add this
+                  onFilesUpdate={handleFilesUpdate}
                 />
               )}
-            </TabsContent>
+        </TabsContent>
           </Tabs>
         </ResizablePanel>
       </ResizablePanelGroup>
