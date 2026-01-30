@@ -5,10 +5,18 @@ import z from "zod";
 import { generateSlug } from "random-word-slugs"
 import { TRPCError } from "@trpc/server";
 
-export const projectsRouter = createTRPCRouter ({
+// Schema for file attachments
+const fileAttachmentSchema = z.object({
+  name: z.string(),
+  type: z.string(),
+  size: z.number(),
+  content: z.string(),
+});
+
+export const projectsRouter = createTRPCRouter({
   getOne: baseProcedure
     .input(z.object({
-      id: z.string().min(1, { message: "Project ID is required!"})
+      id: z.string().min(1, { message: "Project ID is required!" })
     }))
     .query(async ({ input }) => {
       const existingProject = await prisma.project.findUnique({
@@ -23,6 +31,7 @@ export const projectsRouter = createTRPCRouter ({
       }
       return existingProject;
     }),
+
   getMany: baseProcedure
     .query(async () => {
       const projects = await prisma.project.findMany({
@@ -30,16 +39,17 @@ export const projectsRouter = createTRPCRouter ({
       });
       return projects;
     }),
+
   create: baseProcedure
     .input(
       z.object({
         value: z.string()
-          .min(1, { message: "Value is required!"})
-          .max(10000, { message: "Value is too long!"})
+          .min(1, { message: "Value is required!" })
+          .max(10000, { message: "Value is too long!" }),
+        attachments: z.array(fileAttachmentSchema).optional(), // ADD THIS LINE
       })
     )
     .mutation(async ({ input }) => {
-
       const createdProject = await prisma.project.create({
         data: {
           name: generateSlug(2, {
@@ -49,7 +59,8 @@ export const projectsRouter = createTRPCRouter ({
             create: {
               content: input.value,
               role: "USER",
-              type: "RESULT"
+              type: "RESULT",
+              attachments: input.attachments || [], // ADD THIS LINE
             }
           }
         }
@@ -57,9 +68,10 @@ export const projectsRouter = createTRPCRouter ({
 
       await inngest.send({
         name: 'code-agent',
-        data: { 
+        data: {
           input: input.value,
-          projectId: createdProject.id 
+          projectId: createdProject.id,
+          attachments: input.attachments,
         },
       });
 

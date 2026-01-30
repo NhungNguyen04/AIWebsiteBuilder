@@ -3,12 +3,19 @@ import { openai, createAgent, createTool, createNetwork, Tool, Message, createSt
 import { Sandbox } from "@e2b/code-interpreter";
 import { getSandbox, lastAssistantTextMessageContent } from "./utils";
 import z from "zod";
-import { PROMPT, FRAGMENT_TITLE_PROMPT, RESPONSE_PROMPT } from "../prompt";
+import { PROMPT, PROMPT_WITH_DOCS, FRAGMENT_TITLE_PROMPT, RESPONSE_PROMPT } from "../prompt";
 import prisma from "../lib/db";
 
 interface AgentState {
   summary: string;
   files: {[path: string]: string};
+}
+
+interface FileAttachment {
+  name: string;
+  type: string;
+  size: number;
+  content: string;
 }
 
 export const codeAgentFunction = inngest.createFunction(
@@ -19,6 +26,7 @@ export const codeAgentFunction = inngest.createFunction(
       const sandbox = await Sandbox.create("nhung-builder-2");
       return sandbox.sandboxId;
     });
+
     const previousMessages = await step.run("get-previous-messages", async() => {
       const formattedMessages: Message[] = [];
       const messages = await prisma.message.findMany({
@@ -39,7 +47,25 @@ export const codeAgentFunction = inngest.createFunction(
       }
 
       return formattedMessages;
-    })
+    });
+
+    // Prepare system prompt based on whether docs are attached
+    const systemPrompt = await step.run("prepare-prompt", async () => {
+      const attachments = event.data.attachments as FileAttachment[] | undefined;
+      
+      if (attachments && attachments.length > 0) {
+        // Combine all document contents
+        const documentation = attachments
+          .map((att) => `=== File: ${att.name} ===\n${att.content}`)
+          .join('\n\n');
+
+        return PROMPT_WITH_DOCS
+          .replace('{documentation}', documentation)
+          .replace('{userInput}', event.data.input);
+      }
+      
+      return PROMPT;
+    });
 
     const state = createState<AgentState>(
       {
@@ -50,10 +76,11 @@ export const codeAgentFunction = inngest.createFunction(
         messages: previousMessages
       }
     );
+
     const codeAgent = createAgent<AgentState>({
       name: "code_agent",
       description: "An expert coding agent",
-      system: PROMPT,
+      system: systemPrompt,
       model: openai({ model: "gpt-4.1", apiKey: process.env.OPENAI_API_KEY! }),
       tools: [
         createTool({
@@ -164,24 +191,23 @@ export const codeAgentFunction = inngest.createFunction(
 
         return codeAgent;
       }
-    })
+    });
+
     const result = await network.run(event.data.input, { state });
 
     const fragmentTitleGenerator = createAgent({
       name: "fragment_title_generator",
-      description: "A fagment title generator",
+      description: "A fragment title generator",
       system: FRAGMENT_TITLE_PROMPT,
       model: openai({ model: "gpt-4o-mini"}),
-
-    })
+    });
 
     const responseGenerator = createAgent({
       name: "response_generator",
       description: "A response generator",
       system: RESPONSE_PROMPT,
       model: openai({ model: "gpt-4o-mini"}),
-      
-    })
+    });
 
     const { output: fragmentTitleOutput } = await fragmentTitleGenerator.run(result.state.data.summary);
     const { output: responseOutput } = await responseGenerator.run(result.state.data.summary);
@@ -216,7 +242,7 @@ export const codeAgentFunction = inngest.createFunction(
 
     const sandboxUrl = await step.run("get-sandbox-url", async () => {
       const sandbox = await getSandbox(sandboxId);
-      const host =  sandbox.getHost(3000);
+      const host = sandbox.getHost(3000);
       return `http://${host}`;
     });
 
@@ -247,14 +273,13 @@ export const codeAgentFunction = inngest.createFunction(
           projectId: event.data.projectId
         }
       })
-    })
+    });
     
     return {
       url: sandboxUrl,
-      title: "Fragment",
+      title: generateFragmentTitle(),
       files: result.state.data.files,
       summary: result.state.data.summary
     }  
   },
-  
 );

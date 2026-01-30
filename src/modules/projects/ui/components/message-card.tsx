@@ -3,10 +3,16 @@ import { Fragment, MessageRole, MessageType } from "@/generated/prisma";
 import { cn } from "@/src/lib/utils";
 import { format } from "date-fns";
 import Image from "next/image";
-import { ChevronRightIcon, Code2Icon } from "lucide-react";
+import { ChevronRightIcon, Code2Icon, FileTextIcon } from "lucide-react";
 
 interface UserMessageProps {
   content: string;
+  attachments?: Array<{
+    name: string;
+    type: string;
+    size: number;
+    url?: string;
+  }>;
 }
 
 interface AssistantMessageProps {
@@ -53,10 +59,28 @@ const FragmentCard = ({
   )
 };
 
-const UserMessage = ({ content }: UserMessageProps) => {
+const UserMessage = ({ content, attachments }: UserMessageProps) => {
   return (
     <div className="flex justify-end pb-4 pr-2 pl-10">
       <Card className="rounded-lg bg-muted p-3 shadow-none border-none max-w-[80%] break-words">
+        {attachments && attachments.length > 0 && (
+          <div className="flex flex-wrap gap-2 pb-2 mb-2 border-b border-border/50">
+            {attachments.map((file, index) => (
+              <div
+                key={index}
+                className="flex items-center gap-2 px-2 py-1 bg-background rounded text-xs"
+              >
+                <FileTextIcon className="size-3 text-muted-foreground" />
+                <span className="text-muted-foreground truncate max-w-[120px]">
+                  {file.name}
+                </span>
+                <span className="text-muted-foreground">
+                  ({(file.size / 1024).toFixed(1)}KB)
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
         {content}
       </Card>
     </div>
@@ -115,6 +139,12 @@ interface MessageCardProps {
   isActiveFragment: boolean;
   type: MessageType;
   onFragmentClick: (fragment: Fragment) => void;
+  attachments?: Array<{
+    name: string;
+    type: string;
+    size: number;
+    url?: string;
+  }>;
 }
 
 export const MessageCard = ({
@@ -124,7 +154,8 @@ export const MessageCard = ({
   createdAt,
   isActiveFragment,
   type,
-  onFragmentClick
+  onFragmentClick,
+  attachments
 }: MessageCardProps) => {
 
   console.log("Rendering MessageCard with role:", role);
@@ -143,6 +174,6 @@ export const MessageCard = ({
   }
 
   return (
-    <UserMessage content={content} />
+    <UserMessage content={content} attachments={attachments} />
   );
 }

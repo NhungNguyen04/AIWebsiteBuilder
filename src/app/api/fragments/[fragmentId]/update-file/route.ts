@@ -38,7 +38,7 @@ export async function POST(
     // Try to update sandbox
     try {
       const sandboxId = fragment.sandboxUrl.split('//')[1].split('.')[0].split('-').slice(1).join('-');
-      const sandbox = await Sandbox.reconnect(sandboxId);
+      const sandbox = await Sandbox.connect(sandboxId);
       await sandbox.files.write(filePath, content);
       console.log('File updated in sandbox');
     } catch (sandboxError) {
