@@ -14,7 +14,7 @@ export function lastAssistantTextMessageContent(result: AgentResult) {
   const message = result.output[lastAssistantTextMessageIndex] as
     | TextMessage
     | undefined;
-  
+
   return message?.content
     ? typeof message.content === "string"
       ? message.content

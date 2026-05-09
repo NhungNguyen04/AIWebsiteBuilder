@@ -1,4 +1,4 @@
-import { inngest } from "@/src/inngest/client";
+import { codeAgentQueue } from "@/src/lib/queue";
 import prisma from "@/src/lib/db";
 import { baseProcedure, createTRPCRouter } from "@/src/trpc/init";
 import z from "zod";
@@ -66,13 +66,10 @@ export const projectsRouter = createTRPCRouter({
         }
       });
 
-      await inngest.send({
-        name: 'code-agent',
-        data: {
-          input: input.value,
-          projectId: createdProject.id,
-          attachments: input.attachments,
-        },
+      await codeAgentQueue.add('code-agent', {
+        input: input.value,
+        projectId: createdProject.id,
+        attachments: input.attachments,
       });
 
       return createdProject;
