@@ -35,7 +35,7 @@ export const ProjectView = ({ projectId }: Props) => {
 
   return (
     <div className="h-screen">
-      <ResizablePanelGroup direction="horizontal">
+      <ResizablePanelGroup>
         <ResizablePanel minSize={200} defaultSize={35} className="flex flex-col min-h-0">
           <Suspense fallback={<div>Loading Project...</div>}>
             <ProjectHeader projectId={projectId} />
