@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ExternalLinkIcon, RefreshCcwIcon, PaletteIcon } from "lucide-react";
+import { ExternalLinkIcon, RefreshCcwIcon, PaletteIcon, Loader2Icon } from "lucide-react";
 import { Fragment } from "@/generated/prisma";
 import { Button } from "@/components/ui/button";
 import { Hint } from "@/src/components/ui/hint";
@@ -97,7 +97,11 @@ export const FragmentWeb = ({ data, onFilesUpdate }: Props) => {
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <Button size="sm" variant="outline" disabled={isApplyingTheme}>
-              <PaletteIcon className="w-4 h-4 mr-2" />
+              {isApplyingTheme ? (
+                <Loader2Icon className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <PaletteIcon className="w-4 h-4 mr-2" />
+              )}
               <span className="hidden sm:inline">
                 {isApplyingTheme ? 'Applying...' : THEMES[selectedTheme].name}
               </span>
