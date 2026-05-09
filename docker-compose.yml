@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database (optional - comment out if using external database)
+  postgres:
+    image: postgres:16-alpine
+    container_name: websitebuilder-db
+    environment:
+      POSTGRES_USER: ${DB_USER:-websitebuilder}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
+      POSTGRES_DB: ${DB_NAME:-websitebuilder}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-websitebuilder}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - websitebuilder-network
+
+  # Redis Cache (optional - comment out if using external Redis)
+  redis:
+    image: redis:7-alpine
+    container_name: websitebuilder-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - websitebuilder-network
+
+  # Next.js Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: websitebuilder-app
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      # Use DATABASE_URL directly (supports both containerized and external databases)
+      DATABASE_URL: ${DATABASE_URL:-postgresql://websitebuilder:changeme@postgres:5432/websitebuilder}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - websitebuilder-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  websitebuilder-network:
+    driver: bridge

@@ -222,7 +222,7 @@ export const FileExplorer = ({ files, fragmentId, onFilesUpdate }: FileExplorerP
   };
 
   return (
-    <ResizablePanelGroup direction="horizontal">
+    <ResizablePanelGroup>
       <ResizablePanel defaultSize={30} minSize={30} className="bg-sidebar">
         <TreeView 
           data={treeData}

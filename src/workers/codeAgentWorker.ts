@@ -50,7 +50,7 @@ const worker = new Worker('code-agent', async (job) => {
   if (attachments && attachments.length > 0) {
     // Combine all document contents
     const documentation = attachments
-      .map((att) => `=== File: ${att.name} ===\n${att.content}`)
+      .map((att: { name: string; content: string }) => `=== File: ${att.name} ===\n${att.content}`)
       .join('\n\n');
 
     systemPrompt = PROMPT_WITH_DOCS
