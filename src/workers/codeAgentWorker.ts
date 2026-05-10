@@ -247,8 +247,7 @@ const worker = new Worker('code-agent', async (job) => {
   };
 }, {
   connection: {
-    host: process.env.REDIS_HOST || 'localhost',
-    port: parseInt(process.env.REDIS_PORT || '6379'),
+     url: process.env.REDIS_URL,
   },
 });
 
