@@ -22,6 +22,7 @@ RUN apt-get update && apt-get install -y dumb-init
 
 RUN groupadd -r nodejs && useradd -r -g nodejs nextjs
 
+COPY --from=builder --chown=nextjs:nodejs /app/src ./src
 COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json

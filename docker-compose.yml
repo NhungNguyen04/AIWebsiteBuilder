@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Database (optional - comment out if using external database)
   postgres:
     image: postgres:16-alpine
     container_name: websitebuilder-db
@@ -21,7 +20,6 @@ services:
     networks:
       - websitebuilder-network
 
-  # Redis Cache (optional - comment out if using external Redis)
   redis:
     image: redis:7-alpine
     container_name: websitebuilder-redis
@@ -38,19 +36,39 @@ services:
     networks:
       - websitebuilder-network
 
-  # Next.js Application
   app:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: websitebuilder-app
+    command: npm start
     ports:
       - "3000:3000"
     environment:
       NODE_ENV: production
-      # Use DATABASE_URL directly (supports both containerized and external databases)
       DATABASE_URL: ${DATABASE_URL:-postgresql://websitebuilder:changeme@postgres:5432/websitebuilder}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - websitebuilder-network
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: websitebuilder-worker
+    command: npm run worker
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL:-postgresql://websitebuilder:changeme@postgres:5432/websitebuilder}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      E2B_API_KEY: ${E2B_API_KEY}
     depends_on:
       postgres:
         condition: service_healthy

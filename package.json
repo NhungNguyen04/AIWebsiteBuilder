@@ -6,9 +6,12 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "worker": "tsx src/workers/codeAgentWorker.ts"
+    "worker": "tsx src/workers/codeAgentWorker.ts",
+    "queue-ui": "tsx src/lib/bullboard.ts"
   },
   "dependencies": {
+    "@bull-board/api": "^7.0.0",
+    "@bull-board/express": "^7.0.0",
     "@e2b/code-interpreter": "^2.3.3",
     "@hookform/resolvers": "^5.2.2",
     "@inngest/agent-kit": "^0.13.2",
@@ -34,6 +37,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "express": "^5.2.1",
     "ioredis": "^5.10.1",
     "jszip": "^3.10.1",
     "lucide-react": "^0.544.0",
@@ -56,6 +60,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/express": "^5.0.6",
     "@types/node": "^20",
     "@types/prismjs": "^1.26.5",
     "@types/react": "^19",
