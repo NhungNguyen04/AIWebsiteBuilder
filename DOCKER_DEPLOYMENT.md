@@ -27,12 +27,25 @@ cp .env.example .env
 
 # Edit .env with your production values
 nano .env
-# Update:
-# - DATABASE_URL with your database credentials
-# - REDIS_URL with your Redis URL
-# - NODE_ENV=production
-# - Other sensitive values
 ```
+
+#### Option A: Use Containerized Databases (Easiest for development/testing)
+```
+DATABASE_URL=postgresql://websitebuilder:changeme@postgres:5432/websitebuilder
+REDIS_URL=redis://redis:6379
+DB_USER=websitebuilder
+DB_PASSWORD=changeme
+DB_NAME=websitebuilder
+```
+
+#### Option B: Use External Databases (Recommended for production)
+```
+DATABASE_URL=postgresql://user:password@your-postgres-host:5432/database
+REDIS_URL=redis://your-redis-host:6379
+NODE_ENV=production
+```
+
+Then comment out the `postgres` and `redis` services in docker-compose.yml if not needed.
 
 ### 3. Start the application
 
@@ -82,7 +95,35 @@ docker run -d \
 
 ## Production Deployment Tips
 
-### Environment Variables
+### Using External Databases
+
+If you have existing PostgreSQL and Redis instances, you can use them instead of containerizing:
+
+**Edit docker-compose.yml:**
+```yaml
+# Remove or comment out the postgres and redis services
+# Keep only the app service
+
+app:
+  build: .
+  ports:
+    - "3000:3000"
+  environment:
+    NODE_ENV: production
+    DATABASE_URL: postgresql://user:pass@external-db:5432/dbname
+    REDIS_URL: redis://external-redis:6379
+```
+
+**Or just use `.env`:**
+```
+DATABASE_URL=postgresql://user:password@your-db-host:5432/database
+REDIS_URL=redis://your-redis-host:6379
+```
+
+Then run without database services:
+```bash
+docker-compose up -d app
+```
 
 Create a `.env` file with:
 ```

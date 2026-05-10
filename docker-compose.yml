@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Database
+  # PostgreSQL Database (optional - comment out if using external database)
   postgres:
     image: postgres:16-alpine
     container_name: websitebuilder-db
@@ -21,7 +21,7 @@ services:
     networks:
       - websitebuilder-network
 
-  # Redis Cache
+  # Redis Cache (optional - comment out if using external Redis)
   redis:
     image: redis:7-alpine
     container_name: websitebuilder-redis
@@ -48,8 +48,9 @@ services:
       - "3000:3000"
     environment:
       NODE_ENV: production
-      DATABASE_URL: postgresql://${DB_USER:-websitebuilder}:${DB_PASSWORD:-changeme}@postgres:5432/${DB_NAME:-websitebuilder}
-      REDIS_URL: redis://redis:6379
+      # Use DATABASE_URL directly (supports both containerized and external databases)
+      DATABASE_URL: ${DATABASE_URL:-postgresql://websitebuilder:changeme@postgres:5432/websitebuilder}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
     depends_on:
       postgres:
         condition: service_healthy

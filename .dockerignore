@@ -8,6 +8,8 @@ node_modules
 npm-debug.log
 yarn-error.log
 pnpm-debug.log
+node_modules
+generated
 
 # Build outputs
 .next
