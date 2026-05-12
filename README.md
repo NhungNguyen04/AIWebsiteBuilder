@@ -1,6 +1,6 @@
 # Codis - AI Website Builder
 
-![Codis home page](public\screenshots\home.png)
+![Codis home page](public/screenshots/home.png)
 
 Codis is an AI-powered full-stack website generation platform built with Next.js, Prisma, BullMQ, Redis, PostgreSQL, and isolated sandbox execution.
 
