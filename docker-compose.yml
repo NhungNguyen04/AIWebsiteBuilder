@@ -58,6 +58,22 @@ services:
       - websitebuilder-network
     restart: unless-stopped
 
+  bullboard:
+    image: websitebuilder
+    container_name: websitebuilder-bullboard
+    command: npm run queue-ui
+    ports:
+      - "3010:3010"
+    environment:
+      NODE_ENV: production
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - websitebuilder-network
+    restart: unless-stopped
+
   worker:
     image: websitebuilder
     container_name: websitebuilder-worker
