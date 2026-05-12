@@ -37,6 +37,7 @@ services:
       - websitebuilder-network
 
   app:
+    image: websitebuilder
     build:
       context: .
       dockerfile: Dockerfile
@@ -58,9 +59,7 @@ services:
     restart: unless-stopped
 
   worker:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: websitebuilder
     container_name: websitebuilder-worker
     command: npm run worker
     environment:
