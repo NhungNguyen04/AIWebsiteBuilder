@@ -210,7 +210,7 @@ const worker = new Worker('code-agent', async (job) => {
     !result.state.data.summary ||
     Object.keys(result.state.data.files || {}).length === 0;
 
-  const sandboxUrl = `http://${sandbox.getHost(3000)}`;
+  const sandboxUrl = `https://${sandbox.getHost(3000)}`;
 
   if (isError) {
     await prisma.message.create({
