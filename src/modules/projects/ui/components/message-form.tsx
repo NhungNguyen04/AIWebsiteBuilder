@@ -14,6 +14,10 @@ import { ALLOWED_FILE_TYPES, MAX_FILE_SIZE, readFileAsText, extractTextFromPDF, 
 
 interface Props {
   projectId: string;
+  // True while there's a QUEUED/RUNNING job for this project's latest
+  // message. Disables the form so a second prompt can't fire while the
+  // worker is still mutating the same sandbox/files.
+  isJobActive?: boolean;
 }
 
 const formSchema = z.object({
@@ -22,7 +26,7 @@ const formSchema = z.object({
           .max(10000, { message: "Value is too long!"}),
 })
 
-export const MessageForm = ({ projectId }: Props) => {
+export const MessageForm = ({ projectId, isJobActive }: Props) => {
   const [isFocused, setIsFocused] = useState(false);
   const [attachments, setAttachments] = useState<FileAttachment[]>([]);
   const [isProcessingFile, setIsProcessingFile] = useState(false);
@@ -131,7 +135,8 @@ export const MessageForm = ({ projectId }: Props) => {
   }
 
   const isPending = createMessage.isPending;
-  const isButtonDisabled = isPending || !form.formState.isValid || isProcessingFile;
+  const isDisabled = isPending || isProcessingFile || isJobActive;
+  const isButtonDisabled = isDisabled || !form.formState.isValid;
   const showUsage = false;
 
   return (
@@ -183,14 +188,14 @@ export const MessageForm = ({ projectId }: Props) => {
               className="pt-4 resize-none border-none w-full outline-none bg-transparent"
               minRows={2}
               maxRows={8}
-              placeholder="What would you like to build?"
+              placeholder={isJobActive ? "Waiting for the current run to finish..." : "What would you like to build?"}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
                   e.preventDefault();
                   form.handleSubmit(onSubmit)();
                 }
               }}
-              disabled={isPending || isProcessingFile}
+              disabled={isDisabled}
             />
           )}
         />
@@ -204,7 +209,7 @@ export const MessageForm = ({ projectId }: Props) => {
               multiple
               className="hidden"
               onChange={handleFileSelect}
-              disabled={isPending || isProcessingFile}
+              disabled={isDisabled}
             />
             <Button
               type="button"
@@ -212,7 +217,7 @@ export const MessageForm = ({ projectId }: Props) => {
               size="sm"
               className="h-8 px-2"
               onClick={() => fileInputRef.current?.click()}
-              disabled={isPending || isProcessingFile}
+              disabled={isDisabled}
             >
               {isProcessingFile ? (
                 <Loader2Icon className="size-4 animate-spin" />

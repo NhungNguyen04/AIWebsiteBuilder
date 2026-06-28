@@ -46,7 +46,7 @@ export const projectsRouter = createTRPCRouter({
         value: z.string()
           .min(1, { message: "Value is required!" })
           .max(10000, { message: "Value is too long!" }),
-        attachments: z.array(fileAttachmentSchema).optional(), // ADD THIS LINE
+        attachments: z.array(fileAttachmentSchema).optional(),
       })
     )
     .mutation(async ({ input }) => {
@@ -60,16 +60,33 @@ export const projectsRouter = createTRPCRouter({
               content: input.value,
               role: "USER",
               type: "RESULT",
-              attachments: input.attachments || [], // ADD THIS LINE
+              attachments: input.attachments || [],
             }
           }
-        }
+        },
+        include: {
+          messages: true,
+        },
       });
 
-      await codeAgentQueue.add('code-agent', {
+      // The single message we just created via the nested write above.
+      const createdMessage = createdProject.messages[0];
+
+      const bullJob = await codeAgentQueue.add('code-agent', {
         input: input.value,
         projectId: createdProject.id,
         attachments: input.attachments,
+      });
+
+      await prisma.job.create({
+        data: {
+          bullJobId: bullJob.id!,
+          projectId: createdProject.id,
+          messageId: createdMessage.id,
+          input: input.value,
+          attachments: input.attachments || [],
+          status: 'QUEUED',
+        },
       });
 
       return createdProject;

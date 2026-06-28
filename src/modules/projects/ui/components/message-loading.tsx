@@ -1,5 +1,7 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { SquareIcon } from "lucide-react";
 
 const ShimmerMessages = () => {
   const messages = [
@@ -33,7 +35,12 @@ const ShimmerMessages = () => {
   )
 };
 
-export const MessageLoading = () => {
+interface MessageLoadingProps {
+  onStop?: () => void;
+  isStopping?: boolean;
+}
+
+export const MessageLoading = ({ onStop, isStopping }: MessageLoadingProps) => {
 
   return (
     <div className="flex flex-col group px-2 pb-4">
@@ -47,8 +54,21 @@ export const MessageLoading = () => {
         />
         <span className="text-sm font-medium">Codis</span>
       </div>
-      <div className="pl-8.5 flex flex-col gap-y-4">
+      <div className="pl-8.5 flex items-center justify-between gap-y-4">
         <ShimmerMessages />
+        {onStop && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-7 gap-1.5 text-xs shrink-0"
+            onClick={onStop}
+            disabled={isStopping}
+          >
+            <SquareIcon className="size-3 fill-current" />
+            {isStopping ? "Stopping..." : "Stop"}
+          </Button>
+        )}
       </div>
     </div>
   )

@@ -23,6 +23,14 @@ enum MessageType {
   RESULT
 }
 
+enum JobStatus {
+  QUEUED
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
 model Message {
   id String @id @default(uuid())
   content String
@@ -35,6 +43,11 @@ model Message {
   attachments Json? // Store file info: [{name, url, type, size}]
 
   fragment Fragment?
+
+  // A USER message that triggered a worker run has one Job per attempt
+  // (retries add another Job row pointing at the same message, rather
+  // than a new message bubble). Take the latest by createdAt for "current".
+  jobs Job[]
 
   projectId String
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
@@ -60,4 +73,37 @@ model Project {
   updatedAt DateTime @default(now())
 
   messages Message[]
+  jobs     Job[]
+}
+
+model Job {
+  id        String    @id @default(uuid())
+  bullJobId String    @unique // BullMQ's job.id, used to look the job up in the queue
+  status    JobStatus @default(QUEUED)
+
+  // Original request, stored so "Retry" can resubmit identical input
+  // without depending on the triggering Message still existing/unedited.
+  input       String
+  attachments Json?
+
+  // Set by the stop endpoint; polled by the worker at safe checkpoints.
+  // Kept separate from `status` so the API can flip it instantly without
+  // racing the worker's own status writes.
+  cancelRequested Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // The USER message whose submission created this job. Optional so a job
+  // can outlive a deleted message. NOT unique: a retry adds another Job
+  // row pointing at the same message (one row per attempt), rather than
+  // a new message bubble or an orphaned job.
+  messageId String?
+  message   Message? @relation(fields: [messageId], references: [id], onDelete: SetNull)
+
+  @@index([projectId, status])
+  @@index([messageId, createdAt])
 }

@@ -1,9 +1,10 @@
 import { Card } from "@/src/components/ui/card";
+import { Button } from "@/src/components/ui/button";
 import { Fragment, MessageRole, MessageType } from "@prisma/client";
 import { cn } from "@/src/lib/utils";
 import { format } from "date-fns";
 import Image from "next/image";
-import { ChevronRightIcon, Code2Icon, FileTextIcon } from "lucide-react";
+import { ChevronRightIcon, Code2Icon, FileTextIcon, RotateCcwIcon } from "lucide-react";
 
 interface UserMessageProps {
   content: string;
@@ -22,6 +23,8 @@ interface AssistantMessageProps {
   onFragmentClick: (fragment: Fragment) => void;
   createdAt: Date;
   type: MessageType;
+  onRetry?: () => void;
+  isRetrying?: boolean;
 }
 
 interface FragmentCardProps {
@@ -93,7 +96,9 @@ const AssistantMessage = ({
   isActiveFragment,
   onFragmentClick,
   createdAt,
-  type
+  type,
+  onRetry,
+  isRetrying
 }: AssistantMessageProps) => {
   return (
     <div className={cn(
@@ -126,6 +131,19 @@ const AssistantMessage = ({
             onFragmentClick={onFragmentClick}
           />
         )}
+        {type === "ERROR" && onRetry && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="w-fit h-7 gap-1.5 text-xs"
+            onClick={onRetry}
+            disabled={isRetrying}
+          >
+            <RotateCcwIcon className="size-3" />
+            {isRetrying ? "Retrying..." : "Retry"}
+          </Button>
+        )}
       </div>
     </div>
   )
@@ -145,6 +163,8 @@ interface MessageCardProps {
     size: number;
     url?: string;
   }>;
+  onRetry?: () => void;
+  isRetrying?: boolean;
 }
 
 export const MessageCard = ({
@@ -155,10 +175,10 @@ export const MessageCard = ({
   isActiveFragment,
   type,
   onFragmentClick,
-  attachments
+  attachments,
+  onRetry,
+  isRetrying
 }: MessageCardProps) => {
-
-  console.log("Rendering MessageCard with role:", role);
 
   if (role === "ASSISTANT") {
     return (
@@ -169,6 +189,8 @@ export const MessageCard = ({
         onFragmentClick={onFragmentClick}
         createdAt={createdAt}
         type={type}
+        onRetry={onRetry}
+        isRetrying={isRetrying}
       />
     )
   }
